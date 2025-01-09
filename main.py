@@ -8,9 +8,10 @@ from tqdm import tqdm
 
 
 class Session:
-  def __init__(self, images: bool = True, videos: bool = True, postLimit: int = 10):
+  def __init__(self, images: bool = True, videos: bool = False, attachments: bool = True, postLimit: int = 10):
     self.downloadImages = images
     self.downloadVideos = videos
+    self.downloadAttachments = attachments
     self.postLimit = postLimit
     self.downloadedPosts = 0
     self.downloadedFiles = 0
@@ -154,6 +155,10 @@ class Post:
     if s.downloadVideos == True:
       for vid in self.info['videos']:
         download(vid)
+
+    if s.downloadAttachments == True:
+      for attach in self.info['attachments']:
+        download(attach)
 
     s.downloadedPosts += 1
     
