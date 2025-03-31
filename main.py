@@ -19,7 +19,7 @@ class Session:
 
   @property
   def downloadedMB(self):
-    return self.downloadedData / 1024
+    return round((self.downloadedData / 1024), 2)
 
 def dataTouch():
   default = {
