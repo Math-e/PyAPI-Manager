@@ -49,6 +49,7 @@ def downloadMedia(link: str, path: Path):
   if r.status_code == 200:
     # increasing session stats
     s.downloadedFiles += 1
+    # TODO BUG something is wrong in size increase
     s.downloadedData += r.filesize if hasattr(r, 'filesize') else r.__sizeof__()
 
     return True
@@ -189,6 +190,8 @@ def main():
 
   requestedCreator = Creator(creator, service).getPosts(post)
 
-  print('Session ended!\n%s posts downloaded, transfering %sMB from %s medias'%(s.downloadedPosts, s.downloadedMB, s.downloadedFiles))
+  print('Session ended!\n%s posts downloaded, transfered %sMB from %s medias'%(s.downloadedPosts, s.downloadedMB, s.downloadedFiles))
 
+
+# TODO loop argv
 main()
