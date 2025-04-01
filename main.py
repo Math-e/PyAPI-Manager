@@ -19,7 +19,7 @@ class Session:
 
   @property
   def downloadedMB(self):
-    return round((self.downloadedData / 1024), 2)
+    return round((self.downloadedData / 1024 / 1024), 2)
 
 def dataTouch():
   default = {
@@ -49,8 +49,7 @@ def downloadMedia(link: str, path: Path):
   if r.status_code == 200:
     # increasing session stats
     s.downloadedFiles += 1
-    # TODO BUG something is wrong in size increase
-    s.downloadedData += r.filesize if hasattr(r, 'filesize') else r.__sizeof__()
+    s.downloadedData += filesize
 
     return True
 
