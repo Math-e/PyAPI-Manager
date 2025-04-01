@@ -4,8 +4,10 @@ import shutil
 from requests import get
 from sys import argv
 from pathlib import Path
-from tqdm import tqdm
-
+try:
+  from tqdm import tqdm
+except ModuleNotFoundError:
+    print("tqdm not installed")
 
 class Session:
   def __init__(self, images: bool = True, videos: bool = False, attachments: bool = True, postLimit: int = 10):
@@ -41,9 +43,15 @@ def downloadMedia(link: str, path: Path):
   r = get(link, stream=True)
   filesize = int(r.headers.get("Content-Length"))
   
-  with tqdm.wrapattr(r.raw, "read", total=filesize, desc="")as raw:
+  # tqdm is optional module
+  if 'tqdm' in globals():
+    with tqdm.wrapattr(r.raw, "read", total=filesize, desc="")as raw:
+      with open(path, 'wb') as output:
+        shutil.copyfileobj(raw, output)
+
+  else:
     with open(path, 'wb') as output:
-      shutil.copyfileobj(raw, output)
+      output.write(r.content)
 
   # checking download ok
   if r.status_code == 200:
