@@ -136,10 +136,13 @@ class Post:
 
       # check if media is already downloaded
       if media['name'] not in data['services'][self.creator.service][self.creator.id][self.id]:
+
         print('Downloading from %s - %s'%(self.creator.info['name'], media['name']))
         mediaUrl = "%s/data%s"%(media['server'], media['path'])
-        path = Path(self.creator.savePath, media['name'])
+        # media path is "DownloadDirectory/CreatorDirectory/PostId_MediaName.fmt"
+        path = Path(self.creator.savePath, "%s_%s"%(self.id, media['name']))
         downloadTry = downloadMedia(mediaUrl, path)
+
         if downloadTry:
           data['services'][self.creator.service][self.creator.id][self.id].append(media['name'])
           saveData()
