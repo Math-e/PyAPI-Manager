@@ -62,7 +62,7 @@ def downloadMedia(link: str, path: Path):
     return True
 
   else:
-    print('Error downloading')
+    print('Error downloading. Code %s'%r.status_code)
     return None
 
 

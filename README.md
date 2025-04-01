@@ -13,4 +13,3 @@ You can set some configurations for the session (posts and data size to download
 #### Todo:
 - Network error handling and exceptions
 - Settings in a .ini file
-- Make tqdm optional
