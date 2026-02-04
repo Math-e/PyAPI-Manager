@@ -78,13 +78,13 @@ class Creator:
   def __init__(self, id: str, service: str):
     self.id = id
     self.service = service
-    self.urlPosts = "%sapi/v1/%s/user/%s"%(baseUrl, service, id)
-    self.urlProfile = "%sapi/v1/%s/user/%s/profile"%(baseUrl, service, id)
-    self.urlBrowser = "%s%s/user/%s"%(baseUrl, service, id)
+    self.urlPosts = "%sapi/v1/%s/user/%s".format(baseUrl, service, id)
+    self.urlProfile = "%sapi/v1/%s/user/%s/profile".format(baseUrl, service, id)
+    self.urlBrowser = "%s%s/user/%s".format(baseUrl, service, id)
     # grab new info from profile url
     if not hasattr(self, 'info'):
       self.info = self.getData()
-    self.savePath = Path('downloads/%s (%s)/'%(self.info['name'], service))
+    self.savePath = Path('downloads/%s (%s)/'.format(self.info['name'], service))
     Path.mkdir(self.savePath, exist_ok=True)
     self.posts = []
 
@@ -105,7 +105,7 @@ class Creator:
             # send the post params to the function, so it doesn't need to call API again
             self.getPost(post['id'])
           else:
-            print('Post %s from %s already downloaded'%(post['id'], self.info['name']))
+            print('Post %s from %s already downloaded'.format(post['id'], self.info['name']))
         else:
           print('%s posts limit reached' % s.postLimit)
           break
@@ -123,8 +123,8 @@ class Post:
   def __init__(self, id: str, creator: Creator):
     self.id = id
     self.creator = creator
-    self.url = "%sapi/v1/%s/user/%s/post/%s"%(baseUrl, creator.service, creator.id, self.id)
-    self.urlBrowser = "%s%s/user/%s/post/%s"%(baseUrl, creator.service, creator.id, self.id)
+    self.url = "%sapi/v1/%s/user/%s/post/%s".format(baseUrl, creator.service, creator.id, self.id)
+    self.urlBrowser = "%s%s/user/%s/post/%s".format(baseUrl, creator.service, creator.id, self.id)
 
     self.info = self.loadInfo()
     
@@ -144,10 +144,10 @@ class Post:
       # check if media is already downloaded
       if media['name'] not in data['services'][self.creator.service][self.creator.id][self.id]:
 
-        print('Downloading from %s - %s'%(self.creator.info['name'], media['name']))
-        mediaUrl = "%s/data%s"%(media['server'], media['path'])
+        print('Downloading from %s - %s'.format(self.creator.info['name'], media['name']))
+        mediaUrl = "%s/data%s".format(media['server'], media['path'])
         # media path is "DownloadDirectory/CreatorDirectory/PostId_MediaName.fmt"
-        path = Path(self.creator.savePath, "%s_%s"%(self.id, media['name']))
+        path = Path(self.creator.savePath, "%s_%s".format(self.id, media['name']))
         downloadTry = downloadMedia(mediaUrl, path)
 
         if downloadTry:
@@ -156,7 +156,7 @@ class Post:
         else:
           print("Couldn't download " + media['name'])
       else:
-        print('%s from %s already downloaded'%(media['name'], self.creator.info['name']))
+        print('%s from %s already downloaded'.format(media['name'], self.creator.info['name']))
 
 
     if s.downloadImages == True:
@@ -200,7 +200,7 @@ def main():
 
   requestedCreator = Creator(creator, service).getPosts(post)
 
-  print('Session ended!\n%s posts downloaded, transfered %sMB from %s medias'%(s.downloadedPosts, s.downloadedMB, s.downloadedFiles))
+  print('Session ended!\n%s posts downloaded, transfered %sMB from %s medias'.format(s.downloadedPosts, s.downloadedMB, s.downloadedFiles))
 
 
 # TODO loop argv
