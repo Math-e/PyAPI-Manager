@@ -173,21 +173,18 @@ class Post:
 
     s.downloadedPosts += 1
     
-dataFile = Path('downloaded.json')
-s = Session()
-data = loadData()
-
-link = argv[1]
-baseUrl = re.match(r"^https:\/\/\w*\.\w*\/", link).group()
-service_user = re.match(r"^https:\/\/[\w\.]*\/(\w*)\/user\/(\w*)\/?", link)
-service = service_user.group(1)
-creator = service_user.group(2)
-post = re.match(r".*\/post\/(\w*)/?", link)
-
-if post:
-  post = post.group(1)
 
 def main(): 
+  link = argv[1]
+  baseUrl = re.match(r"^https:\/\/\w*\.\w*\/", link).group()
+  service_user = re.match(r"^https:\/\/[\w\.]*\/(\w*)\/user\/(\w*)\/?", link)
+  service = service_user.group(1)
+  creator = service_user.group(2)
+  post = re.match(r".*\/post\/(\w*)/?", link)
+
+  if post:
+    post = post.group(1)
+
   if not service in data['services']:
     data['services'][service] = {}
   if not creator in data['services'][service]:
@@ -197,6 +194,10 @@ def main():
 
   print(f'Session ended!\n{s.downloadedPosts} posts downloaded, transfered {s.downloadedMB}MB from {s.downloadedFiles} medias')
 
+dataFile = Path('downloaded.json')
+s = Session()
+data = loadData()
 
-# TODO loop argv
-main()
+if len(argv) > 1:
+  for arg in argv[1:]:
+    main()
