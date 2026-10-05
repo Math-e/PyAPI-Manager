@@ -62,7 +62,7 @@ def downloadMedia(link: str, path: Path):
     return True
 
   else:
-    print('Error downloading. Code %s'%r.status_code)
+    print(f'Error downloading. Code {r.status_code}')
     return None
 
 
@@ -71,20 +71,20 @@ def getApi(link):
   if r.status_code == 200:
     return r.json()
   else:
-    print('Error accessing ' % link)
+    print(f'Error accessing {link}')
     
 
 class Creator:
   def __init__(self, id: str, service: str):
     self.id = id
     self.service = service
-    self.urlPosts = "%sapi/v1/%s/user/%s"%(baseUrl, service, id)
-    self.urlProfile = "%sapi/v1/%s/user/%s/profile"%(baseUrl, service, id)
-    self.urlBrowser = "%s%s/user/%s"%(baseUrl, service, id)
+    self.urlPosts = f"{baseUrl}api/v1/{service}/user/{id}"
+    self.urlProfile = f"{baseUrl}api/v1/{service}/user/{id}/profile"
+    self.urlBrowser = f"{baseUrl}{service}/user/{id}"
     # grab new info from profile url
     if not hasattr(self, 'info'):
       self.info = self.getData()
-    self.savePath = Path('downloads/%s (%s)/'%(self.info['name'], service))
+    self.savePath = Path(f"downloads/{self.info['name']} ({service})/")
     Path.mkdir(self.savePath, exist_ok=True)
     self.posts = []
 
@@ -105,9 +105,9 @@ class Creator:
             # send the post params to the function, so it doesn't need to call API again
             self.getPost(post['id'])
           else:
-            print('Post %s from %s already downloaded'%(post['id'], self.info['name']))
+            print(f"Post {post['id']} from {self.info['name']} already downloaded")
         else:
-          print('%s posts limit reached' % s.postLimit)
+          print(f'{s.postLimit} posts limit reached')
           break
       
 
@@ -123,8 +123,8 @@ class Post:
   def __init__(self, id: str, creator: Creator):
     self.id = id
     self.creator = creator
-    self.url = "%sapi/v1/%s/user/%s/post/%s"%(baseUrl, creator.service, creator.id, self.id)
-    self.urlBrowser = "%s%s/user/%s/post/%s"%(baseUrl, creator.service, creator.id, self.id)
+    self.url = f"{baseUrl}api/v1/{creator.service}/user/{creator.id}/post/{self.id}"
+    self.urlBrowser = f"{baseUrl}{creator.service}/user/{creator.id}/post/{self.id}"
 
     self.info = self.loadInfo()
     
@@ -144,10 +144,10 @@ class Post:
       # check if media is already downloaded
       if media['name'] not in data['services'][self.creator.service][self.creator.id][self.id]:
 
-        print('Downloading from %s - %s'%(self.creator.info['name'], media['name']))
-        mediaUrl = "%s/data%s"%(media['server'], media['path'])
+        print(f"Downloading from {self.creator.info['name']} - {media['name']}")
+        mediaUrl = f"{media['server']}/data{media['path']}"
         # media path is "DownloadDirectory/CreatorDirectory/PostId_MediaName.fmt"
-        path = Path(self.creator.savePath, "%s_%s"%(self.id, media['name']))
+        path = Path(self.creator.savePath, f"{self.id}_{media['name']}")
         downloadTry = downloadMedia(mediaUrl, path)
 
         if downloadTry:
@@ -156,7 +156,7 @@ class Post:
         else:
           print("Couldn't download " + media['name'])
       else:
-        print('%s from %s already downloaded'%(media['name'], self.creator.info['name']))
+        print(f"{media['name']} from {self.creator.info['name']} already downloaded")
 
 
     if s.downloadImages == True:
@@ -173,13 +173,8 @@ class Post:
 
     s.downloadedPosts += 1
     
-
-
-
 dataFile = Path('downloaded.json')
-
 s = Session()
-
 data = loadData()
 
 link = argv[1]
@@ -200,7 +195,7 @@ def main():
 
   requestedCreator = Creator(creator, service).getPosts(post)
 
-  print('Session ended!\n%s posts downloaded, transfered %sMB from %s medias'%(s.downloadedPosts, s.downloadedMB, s.downloadedFiles))
+  print(f'Session ended!\n{s.downloadedPosts} posts downloaded, transfered {s.downloadedMB}MB from {s.downloadedFiles} medias')
 
 
 # TODO loop argv
