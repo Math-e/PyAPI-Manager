@@ -174,8 +174,7 @@ class Post:
     s.downloadedPosts += 1
     
 
-def main(): 
-  link = argv[1]
+def main(link):
   baseUrl = re.match(r"^https:\/\/\w*\.\w*\/", link).group()
   service_user = re.match(r"^https:\/\/[\w\.]*\/(\w*)\/user\/(\w*)\/?", link)
   service = service_user.group(1)
@@ -200,4 +199,4 @@ data = loadData()
 
 if len(argv) > 1:
   for arg in argv[1:]:
-    main()
+    main(arg)
