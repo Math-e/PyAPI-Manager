@@ -135,12 +135,12 @@ class Post:
 
     self.info = self.loadInfo()
     
-    self.downloadMedia()
+    self.downloadMedias()
 
   def loadInfo(self):
     return getApi(self.url)
 
-  def downloadMedia(self):
+  def downloadMedias(self):
     # create post object
     if not self.id in data['services'][self.creator.service][self.creator.id]:
       data['services'][self.creator.service][self.creator.id][self.id] = []
