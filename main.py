@@ -166,10 +166,10 @@ class Post:
         print(f"{media['name']} from {self.creator.info['name']} already downloaded")
     
     for att in self.info['attachments']:
-      if att['name'].split('.')[1] in ['gif', '.jpg', 'png', 'jpeg'] and s.downloadImages == True:
+      if att['name'].split('.')[-1] in ['gif', '.jpg', 'png', 'jpeg'] and s.downloadImages == True:
         download(att)
           
-      elif att['name'].split('.')[1] in ['mp4', 'webm', 'mkv'] and s.downloadVideos == True:
+      elif att['name'].split('.')[-1] in ['mp4', 'webm', 'mkv'] and s.downloadVideos == True:
         download(att)
 
       elif s.downloadAttachments == True:
