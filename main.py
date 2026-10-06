@@ -155,7 +155,11 @@ class Post:
       if media['name'] not in data['services'][self.creator.service][self.creator.id][self.id]:
 
         print(f"Downloading from {self.creator.info['name']} - {media['name']}")
+<<<<<<< HEAD
         mediaUrl = f"{baseUrl}/data{media['path']}"
+=======
+        mediaUrl = f"{media['server']}/data{media['path']}"
+>>>>>>> 3637e7eef5798a3ceb0d4d79e4a4f0d6de01248b
         # media path is "DownloadDirectory/CreatorDirectory/PostId_MediaName.fmt"
         path = Path(self.creator.savePath, f"{self.id}_{media['name']}")
         downloadTry = downloadMedia(mediaUrl, path)
@@ -167,6 +171,7 @@ class Post:
           print("Couldn't download " + media['name'])
       else:
         print(f"{media['name']} from {self.creator.info['name']} already downloaded")
+<<<<<<< HEAD
     
     for att in self.info['attachments']:
       if att['name'].split('.')[1] in ['gif', '.jpg', 'png', 'jpeg'] and s.downloadImages == True:
@@ -174,6 +179,8 @@ class Post:
           
       elif att['name'].split('.')[1] in ['mp4', 'webm', 'mkv'] and s.downloadVideos == True:
         download(att)
+=======
+>>>>>>> 3637e7eef5798a3ceb0d4d79e4a4f0d6de01248b
 
       elif s.downloadAttachments == True:
         download(att)
@@ -181,6 +188,7 @@ class Post:
     s.downloadedPosts += 1
     
 
+<<<<<<< HEAD
 def main(link: str):
   s = Session(link)
 
@@ -199,3 +207,31 @@ data = loadData()
 if len(argv) > 1:
   for link in argv[1:]:
     main(link)
+=======
+def main(link):
+  baseUrl = re.match(r"^https:\/\/\w*\.\w*\/", link).group()
+  service_user = re.match(r"^https:\/\/[\w\.]*\/(\w*)\/user\/(\w*)\/?", link)
+  service = service_user.group(1)
+  creator = service_user.group(2)
+  post = re.match(r".*\/post\/(\w*)/?", link)
+
+  if post:
+    post = post.group(1)
+
+  if not service in data['services']:
+    data['services'][service] = {}
+  if not creator in data['services'][service]:
+    data['services'][service][creator] = {}
+
+  requestedCreator = Creator(creator, service).getPosts(post)
+
+  print(f'Session ended!\n{s.downloadedPosts} posts downloaded, transfered {s.downloadedMB}MB from {s.downloadedFiles} medias')
+
+dataFile = Path('downloaded.json')
+s = Session()
+data = loadData()
+
+if len(argv) > 1:
+  for arg in argv[1:]:
+    main(arg)
+>>>>>>> 3637e7eef5798a3ceb0d4d79e4a4f0d6de01248b
