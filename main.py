@@ -9,12 +9,15 @@ try:
 except ModuleNotFoundError:
     print("tqdm not installed")
 
-class Session:
+class Conf:
   def __init__(self, images: bool = True, videos: bool = False, attachments: bool = True, postLimit: int = 10):
     self.downloadImages = images
     self.downloadVideos = videos
     self.downloadAttachments = attachments
     self.postLimit = postLimit
+
+class Session:
+  def __init__(self):
     self.downloadedPosts = 0
     self.downloadedFiles = 0
     self.downloadedData = 0
@@ -30,17 +33,17 @@ def parseLink(link: str):
   post = re.match(r".*\/post\/(\w*)/?", link)
   return baseUrl, service_user.group(1), service_user.group(2), post.group(1) if post else None
 
-def dataTouch():
+def dataTouch(f):
   default = {
     'services': {}
   }
-  json.dump(default, dataFile.open('w'))
+  json.dump(default, f.open('w'))
 
-def loadData():
-  if not Path.exists(dataFile):
-    dataTouch()
+def loadData(f):
+  if not Path.exists(f):
+    dataTouch(f)
   
-  return json.load(dataFile.open('r'))
+  return json.load(f.open('r'))
 
 def saveData():
   json.dump(data, dataFile.open('w'))
@@ -98,7 +101,7 @@ class Creator:
   def getData(self):
     return getApi(self.urlProfile)
 
-  # downloads the first (s.postLimit) posts, or a specific post if sent
+  # downloads the first (conf.postLimit) posts, or a specific post if sent
   def getPosts(self, postId = None):
     if postId:
       self.getPost(postId)
@@ -106,7 +109,7 @@ class Creator:
       allPosts = getApi(self.urlPosts)
       for post in allPosts:
         # check post download limit
-        if s.downloadedPosts < s.postLimit:
+        if s.downloadedPosts < conf.postLimit:
           # check post already downloaded
           if not post['id'] in data['services'][self.service][self.id]:
             # send the post params to the function, so it doesn't need to call API again
@@ -114,7 +117,7 @@ class Creator:
           else:
             print(f"Post {post['id']} from {self.info['name']} already downloaded")
         else:
-          print(f'{s.postLimit} posts limit reached')
+          print(f'{conf.postLimit} posts limit reached')
           break
       
 
@@ -167,13 +170,13 @@ class Post:
         print(f"{media['name']} from {self.creator.info['name']} already downloaded")
     
     for att in self.info['attachments']:
-      if att['name'].split('.')[-1] in ['gif', '.jpg', 'png', 'jpeg'] and s.downloadImages == True:
+      if att['name'].split('.')[-1] in ['gif', '.jpg', 'png', 'jpeg'] and conf.downloadImages == True:
         download(att)
           
-      elif att['name'].split('.')[-1] in ['mp4', 'webm', 'mkv'] and s.downloadVideos == True:
+      elif att['name'].split('.')[-1] in ['mp4', 'webm', 'mkv'] and conf.downloadVideos == True:
         download(att)
 
-      elif s.downloadAttachments == True:
+      elif conf.downloadAttachments == True:
         download(att)
     
 
@@ -188,7 +191,8 @@ def main():
   print(f'Session ended!\n{s.downloadedPosts} posts downloaded, transfered {s.downloadedMB}MB from {s.downloadedFiles} medias')
 
 dataFile = Path('downloaded.json')
-data = loadData()
+data = loadData(dataFile)
+conf = Conf()
 
 for link in argv[1:]:
   baseUrl, service, creator, post = parseLink(link)
