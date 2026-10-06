@@ -10,7 +10,7 @@ except ModuleNotFoundError:
     print("tqdm not installed")
 
 class Session:
-  def __init__(self, images: bool = True, videos: bool = False, attachments: bool = True, postLimit: int = 10):
+  def __init__(self, link: str, images: bool = True, videos: bool = False, attachments: bool = True, postLimit: int = 10):
     self.downloadImages = images
     self.downloadVideos = videos
     self.downloadAttachments = attachments
@@ -18,6 +18,13 @@ class Session:
     self.downloadedPosts = 0
     self.downloadedFiles = 0
     self.downloadedData = 0
+    self.baseUrl = re.match(r"^https:\/\/\w*\.\w*\/", link).group()
+    self.service_user = re.match(r"^https:\/\/[\w\.]*\/(\w*)\/user\/(\w*)\/?", link)
+    self.service = self.service_user.group(1)
+    self.creator = self.service_user.group(2)
+    post = re.match(r".*\/post\/(\w*)/?", link)
+    if post:
+      self.post = post.group(1)
 
   @property
   def downloadedMB(self):
@@ -62,7 +69,7 @@ def downloadMedia(link: str, path: Path):
     return True
 
   else:
-    print('Error downloading. Code %s'%r.status_code)
+    print(f'Error downloading. Code {r.status_code}')
     return None
 
 
@@ -71,20 +78,23 @@ def getApi(link):
   if r.status_code == 200:
     return r.json()
   else:
-    print('Error accessing ' % link)
+    print(f'Error accessing {link}')
     
 
 class Creator:
-  def __init__(self, id: str, service: str):
+  def __init__(self, s: Session):
+    baseUrl = s.baseUrl
+    service = s.service
+    id = s.creator
     self.id = id
     self.service = service
-    self.urlPosts = "%sapi/v1/%s/user/%s".format(baseUrl, service, id)
-    self.urlProfile = "%sapi/v1/%s/user/%s/profile".format(baseUrl, service, id)
-    self.urlBrowser = "%s%s/user/%s".format(baseUrl, service, id)
+    self.urlPosts = f"{baseUrl}api/v1/{service}/user/{id}"
+    self.urlProfile = f"{baseUrl}api/v1/{service}/user/{id}/profile"
+    self.urlBrowser = f"{baseUrl}{service}/user/{id}"
     # grab new info from profile url
     if not hasattr(self, 'info'):
       self.info = self.getData()
-    self.savePath = Path('downloads/%s (%s)/'.format(self.info['name'], service))
+    self.savePath = Path(f"downloads/{self.info['name']} ({service})/")
     Path.mkdir(self.savePath, exist_ok=True)
     self.posts = []
 
@@ -105,9 +115,9 @@ class Creator:
             # send the post params to the function, so it doesn't need to call API again
             self.getPost(post['id'])
           else:
-            print('Post %s from %s already downloaded'.format(post['id'], self.info['name']))
+            print(f"Post {post['id']} from {self.info['name']} already downloaded")
         else:
-          print('%s posts limit reached' % s.postLimit)
+          print(f'{s.postLimit} posts limit reached')
           break
       
 
@@ -123,8 +133,8 @@ class Post:
   def __init__(self, id: str, creator: Creator):
     self.id = id
     self.creator = creator
-    self.url = "%sapi/v1/%s/user/%s/post/%s".format(baseUrl, creator.service, creator.id, self.id)
-    self.urlBrowser = "%s%s/user/%s/post/%s".format(baseUrl, creator.service, creator.id, self.id)
+    self.url = f"{baseUrl}api/v1/{creator.service}/user/{creator.id}/post/{self.id}"
+    self.urlBrowser = f"{baseUrl}{creator.service}/user/{creator.id}/post/{self.id}"
 
     self.info = self.loadInfo()
     
@@ -144,10 +154,10 @@ class Post:
       # check if media is already downloaded
       if media['name'] not in data['services'][self.creator.service][self.creator.id][self.id]:
 
-        print('Downloading from %s - %s'.format(self.creator.info['name'], media['name']))
-        mediaUrl = "%s/data%s".format(media['server'], media['path'])
+        print(f"Downloading from {self.creator.info['name']} - {media['name']}")
+        mediaUrl = f"{baseUrl}/data{media['path']}"
         # media path is "DownloadDirectory/CreatorDirectory/PostId_MediaName.fmt"
-        path = Path(self.creator.savePath, "%s_%s".format(self.id, media['name']))
+        path = Path(self.creator.savePath, f"{self.id}_{media['name']}")
         downloadTry = downloadMedia(mediaUrl, path)
 
         if downloadTry:
@@ -156,52 +166,36 @@ class Post:
         else:
           print("Couldn't download " + media['name'])
       else:
-        print('%s from %s already downloaded'.format(media['name'], self.creator.info['name']))
+        print(f"{media['name']} from {self.creator.info['name']} already downloaded")
+    
+    for att in self.info['attachments']:
+      if att['name'].split('.')[1] in ['gif', '.jpg', 'png', 'jpeg'] and s.downloadImages == True:
+        download(att)
+          
+      elif att['name'].split('.')[1] in ['mp4', 'webm', 'mkv'] and s.downloadVideos == True:
+        download(att)
 
-
-    if s.downloadImages == True:
-      for img in self.info['previews']:
-        download(img)
-        
-    if s.downloadVideos == True:
-      for vid in self.info['videos']:
-        download(vid)
-
-    if s.downloadAttachments == True:
-      for attach in self.info['attachments']:
-        download(attach)
+      elif s.downloadAttachments == True:
+        download(att)
 
     s.downloadedPosts += 1
     
 
+def main(link: str):
+  s = Session(link)
 
+  if not s.service in data['services']:
+    data['services'][s.service] = {}
+  if not s.creator in data['services'][s.service]:
+    data['services'][s.service][s.creator] = {}
+
+  requestedCreator = Creator(s).getPosts(s.post)
+
+  print(f'Session ended!\n{s.downloadedPosts} posts downloaded, transfered {s.downloadedMB}MB from {s.downloadedFiles} medias')
 
 dataFile = Path('downloaded.json')
-
-s = Session()
-
 data = loadData()
 
-link = argv[1]
-baseUrl = re.match(r"^https:\/\/\w*\.\w*\/", link).group()
-service_user = re.match(r"^https:\/\/[\w\.]*\/(\w*)\/user\/(\w*)\/?", link)
-service = service_user.group(1)
-creator = service_user.group(2)
-post = re.match(r".*\/post\/(\w*)/?", link)
-
-if post:
-  post = post.group(1)
-
-def main(): 
-  if not service in data['services']:
-    data['services'][service] = {}
-  if not creator in data['services'][service]:
-    data['services'][service][creator] = {}
-
-  requestedCreator = Creator(creator, service).getPosts(post)
-
-  print('Session ended!\n%s posts downloaded, transfered %sMB from %s medias'.format(s.downloadedPosts, s.downloadedMB, s.downloadedFiles))
-
-
-# TODO loop argv
-main()
+if len(argv) > 1:
+  for link in argv[1:]:
+    main(link)
