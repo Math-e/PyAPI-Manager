@@ -197,7 +197,7 @@ class Post:
         download(att)
     
 
-def main():
+def downloadLink():
   if not service in data['services']:
     data['services'][service] = {}
   if not creator in data['services'][service]:
@@ -205,14 +205,25 @@ def main():
 
   requestedCreator = Creator(creator, service).getPosts(post)
 
-  print(f'Session ended!\n{s.downloadedPosts} posts downloaded, transfered {s.downloadedMB}MB from {s.downloadedFiles} medias')
+  print(f'Downloaded {s.downloadedPosts} posts / {s.downloadedFiles} medias / {s.downloadedMB}MB')
 
 dataFile = Path('downloaded.json')
 data = loadData(dataFile)
 confFile = Path('config.ini')
 conf = loadConf(confFile)
 
+mainSession = Session()
+
 for link in argv[1:]:
   baseUrl, service, creator, post = parseLink(link)
   s = Session()
-  main()
+  downloadLink()
+
+  mainSession.downloadedMB += s.downloadedMB
+  mainSession.downloadedFiles += s.downloadedFiles
+  mainSession.downloadedPosts += s.downloadedPosts
+
+if len(argv) > 2:
+  print(f'End of batch.\nDownloaded {mainSession.downloadedFiles} from {mainSession.downloadedPosts} posts with {mainSession.downloadedMB}MB.')
+elif len(argv) < 2:
+  print('Insert at least one link when calling the script.')
