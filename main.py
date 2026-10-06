@@ -224,6 +224,6 @@ for link in argv[1:]:
   mainSession.downloadedPosts += s.downloadedPosts
 
 if len(argv) > 2:
-  print(f'End of batch.\nDownloaded {mainSession.downloadedFiles} from {mainSession.downloadedPosts} posts with {mainSession.downloadedMB}MB.')
+  print(f'End of batch.\nDownloaded {mainSession.downloadedFiles} medias from {mainSession.downloadedPosts} posts with {mainSession.downloadedMB}MB.')
 elif len(argv) < 2:
   print('Insert at least one link when calling the script.')
