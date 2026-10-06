@@ -10,7 +10,7 @@ except ModuleNotFoundError:
     print("tqdm not installed")
 
 class Session:
-  def __init__(self, link: str, images: bool = True, videos: bool = False, attachments: bool = True, postLimit: int = 10):
+  def __init__(self, images: bool = True, videos: bool = False, attachments: bool = True, postLimit: int = 10):
     self.downloadImages = images
     self.downloadVideos = videos
     self.downloadAttachments = attachments
@@ -18,17 +18,17 @@ class Session:
     self.downloadedPosts = 0
     self.downloadedFiles = 0
     self.downloadedData = 0
-    self.baseUrl = re.match(r"^https:\/\/\w*\.\w*\/", link).group()
-    self.service_user = re.match(r"^https:\/\/[\w\.]*\/(\w*)\/user\/(\w*)\/?", link)
-    self.service = self.service_user.group(1)
-    self.creator = self.service_user.group(2)
-    post = re.match(r".*\/post\/(\w*)/?", link)
-    if post:
-      self.post = post.group(1)
 
   @property
   def downloadedMB(self):
     return round((self.downloadedData / 1024 / 1024), 2)
+
+# returns baseUrl, service, creator and post (None if the link has no post)
+def parseLink(link: str):
+  baseUrl = re.match(r"^https:\/\/[\w\.-]+\/", link).group()
+  service_user = re.match(r"^https:\/\/[\w\.-]+\/(\w*)\/user\/(\w*)\/?", link)
+  post = re.match(r".*\/post\/(\w*)/?", link)
+  return baseUrl, service_user.group(1), service_user.group(2), post.group(1) if post else None
 
 def dataTouch():
   default = {
@@ -82,10 +82,7 @@ def getApi(link):
     
 
 class Creator:
-  def __init__(self, s: Session):
-    baseUrl = s.baseUrl
-    service = s.service
-    id = s.creator
+  def __init__(self, id: str, service: str):
     self.id = id
     self.service = service
     self.urlPosts = f"{baseUrl}api/v1/{service}/user/{id}"
@@ -155,7 +152,7 @@ class Post:
       if media['name'] not in data['services'][self.creator.service][self.creator.id][self.id]:
 
         print(f"Downloading from {self.creator.info['name']} - {media['name']}")
-        mediaUrl = f"{baseUrl}/data{media['path']}"
+        mediaUrl = f"{baseUrl}data{media['path']}"
         # media path is "DownloadDirectory/CreatorDirectory/PostId_MediaName.fmt"
         path = Path(self.creator.savePath, f"{self.id}_{media['name']}")
         downloadTry = downloadMedia(mediaUrl, path)
@@ -181,21 +178,20 @@ class Post:
     s.downloadedPosts += 1
     
 
-def main(link: str):
-  s = Session(link)
+def main():
+  if not service in data['services']:
+    data['services'][service] = {}
+  if not creator in data['services'][service]:
+    data['services'][service][creator] = {}
 
-  if not s.service in data['services']:
-    data['services'][s.service] = {}
-  if not s.creator in data['services'][s.service]:
-    data['services'][s.service][s.creator] = {}
-
-  requestedCreator = Creator(s).getPosts(s.post)
+  requestedCreator = Creator(creator, service).getPosts(post)
 
   print(f'Session ended!\n{s.downloadedPosts} posts downloaded, transfered {s.downloadedMB}MB from {s.downloadedFiles} medias')
 
 dataFile = Path('downloaded.json')
 data = loadData()
 
-if len(argv) > 1:
-  for link in argv[1:]:
-    main(link)
+for link in argv[1:]:
+  baseUrl, service, creator, post = parseLink(link)
+  s = Session()
+  main()
