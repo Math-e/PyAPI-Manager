@@ -4,6 +4,7 @@ import shutil
 from requests import get
 from sys import argv
 from pathlib import Path
+from configparser import ConfigParser
 try:
   from tqdm import tqdm
 except ModuleNotFoundError:
@@ -48,6 +49,22 @@ def loadData(f):
 def saveData():
   json.dump(data, dataFile.open('w'))
   return True
+
+def loadConf(f):
+  parser = ConfigParser()
+  # keep camelCase keys when writing the file
+  parser.optionxform = str
+  # Conf defaults are used for the new file and for keys missing in an existing one
+  parser['conf'] = {key: str(value) for key, value in vars(Conf()).items()}
+
+  if Path.exists(f):
+    parser.read(f)
+  else:
+    with f.open('w') as output:
+      parser.write(output)
+
+  c = parser['conf']
+  return Conf(c.getboolean('downloadImages'), c.getboolean('downloadVideos'), c.getboolean('downloadAttachments'), c.getint('postLimit'))
 
 def downloadMedia(link: str, path: Path):
   r = get(link, stream=True)
@@ -192,7 +209,8 @@ def main():
 
 dataFile = Path('downloaded.json')
 data = loadData(dataFile)
-conf = Conf()
+confFile = Path('config.ini')
+conf = loadConf(confFile)
 
 for link in argv[1:]:
   baseUrl, service, creator, post = parseLink(link)
