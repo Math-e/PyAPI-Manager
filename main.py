@@ -187,6 +187,9 @@ class Post:
         print(f"{media['name']} from {self.creator.info['name']} already downloaded")
     
     for att in self.info['attachments']:
+      # some items only have the 'path', so the file name in it is used as 'name'
+      att['name'] = att['name'] if att.get('name') else att['path']
+
       if att['name'].split('.')[-1] in ['gif', '.jpg', 'png', 'jpeg'] and conf.downloadImages == True:
         download(att)
           
