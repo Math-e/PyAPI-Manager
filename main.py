@@ -222,7 +222,7 @@ for link in argv[1:]:
   s = Session()
   downloadLink()
 
-  mainSession.downloadedMB += s.downloadedMB
+  mainSession.downloadedData += s.downloadedData
   mainSession.downloadedFiles += s.downloadedFiles
   mainSession.downloadedPosts += s.downloadedPosts
 
