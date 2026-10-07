@@ -172,7 +172,10 @@ class Post:
       if media['name'] not in data['services'][self.creator.service][self.creator.id][self.id]:
 
         print(f"Downloading from {self.creator.info['name']} - {media['name']}")
-        mediaUrl = f"{baseUrl}data{media['path']}"
+        # insert subdomain file.example.com/
+        c = re.match(r"^(https:\/\/)(.*)", baseUrl)
+        cdnUrl = f'{c.group(1)}file.{c.group(2)}'
+        mediaUrl = f"{cdnUrl}data{media['path']}"
         # media path is "DownloadDirectory/CreatorDirectory/PostId_MediaName.fmt"
         path = Path(self.creator.savePath, f"{self.id}_{media['name']}")
         downloadTry = downloadMedia(mediaUrl, path)
