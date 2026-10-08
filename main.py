@@ -183,7 +183,6 @@ class Post:
         if downloadTry:
           data['services'][self.creator.service][self.creator.id][self.id].append(media['name'])
           saveData()
-          s.downloadedPosts += 1
         else:
           print("Couldn't download " + media['name'])
       else:
@@ -198,6 +197,8 @@ class Post:
 
       elif conf.downloadAttachments == True:
         download(att)
+    
+    s.downloadedPosts += 1
     
 
 def downloadLink():
