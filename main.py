@@ -164,7 +164,7 @@ class Post:
       data['services'][self.creator.service][self.creator.id][self.id] = []
 
     # unique function for videos and images
-    def download(media):
+    def download(media, thumbnail: bool = None):
 
       # check if media is already downloaded
       if media['name'] not in data['services'][self.creator.service][self.creator.id][self.id]:
@@ -174,9 +174,11 @@ class Post:
         c = re.match(r"^(https:\/\/)(.*)", baseUrl)
         cdnUrl = f'{c.group(1)}file.{c.group(2)}'
         mediaUrl = f"{cdnUrl}data{media['path']}"
+        # the images with no higher resolution have no 'name' use the img. subdomain and url /thumbnail/data/
+        thumbnailUrl = f"{c.group(1)}img.{c.group(2)}thumbnail/data{media['path']}"
         # media path is "DownloadDirectory/CreatorDirectory/PostId_MediaName.fmt"
         path = Path(self.creator.savePath, f"{self.id}_{media['name']}")
-        downloadTry = downloadMedia(mediaUrl, path)
+        downloadTry = downloadMedia(mediaUrl, path) if thumbnail else downloadMedia(thumbnailUrl, path)
 
         if downloadTry:
           data['services'][self.creator.service][self.creator.id][self.id].append(media['name'])
@@ -187,7 +189,7 @@ class Post:
         print(f"{media['name']} from {self.creator.info['name']} already downloaded")
     
     for att in self.info['attachments']:
-      # some items only have the 'path', so the file name in it is used as 'name'
+      # some medias only have the 'path' and are hosted in the img. subdomain, so the file name in it is used as 'name'
       att['name'] = att['name'] if att.get('name') else att['path'].split('/')[-1]
 
       if att['name'].split('.')[-1] in ['gif', '.jpg', 'png', 'jpeg'] and conf.downloadImages == True:
