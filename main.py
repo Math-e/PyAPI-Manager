@@ -68,24 +68,22 @@ def loadConf(f):
 
 def downloadMedia(link: str, path: Path):
   r = get(link, stream=True)
-  filesize = int(r.headers.get("Content-Length"))
-  
-  # tqdm is optional module
-  if 'tqdm' in globals():
-    with tqdm.wrapattr(r.raw, "read", total=filesize, desc="")as raw:
-      with open(path, 'wb') as output:
-        shutil.copyfileobj(raw, output)
-
-  else:
-    with open(path, 'wb') as output:
-      output.write(r.content)
-
-  # checking download ok
   if r.status_code == 200:
+    filesize = int(r.headers.get("Content-Length"))
+  
+    # tqdm is optional module
+    if 'tqdm' in globals():
+      with tqdm.wrapattr(r.raw, "read", total=filesize, desc="")as raw:
+        with open(path, 'wb') as output:
+          shutil.copyfileobj(raw, output)
+
+    else:
+      with open(path, 'wb') as output:
+        output.write(r.content)
+
     # increasing session stats
     s.downloadedFiles += 1
     s.downloadedData += filesize
-
     return True
 
   else:
