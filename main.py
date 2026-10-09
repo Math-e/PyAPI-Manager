@@ -12,12 +12,13 @@ except ModuleNotFoundError:
     print("tqdm not installed")
 
 class Conf:
-  def __init__(self, images: bool = True, videos: bool = False, attachments: bool = True, postLimit: int = 10, delay: int = 0):
+  def __init__(self, images: bool = True, videos: bool = False, attachments: bool = True, postLimit: int = 10, delay: int = 0, directory: str = './downloads'):
     self.downloadImages = images
     self.downloadVideos = videos
     self.downloadAttachments = attachments
     self.postLimit = postLimit
     self.delay = delay
+    self.downloadDir = directory
 
 class Session:
   def __init__(self):
@@ -53,7 +54,8 @@ def saveData():
   return True
 
 def loadConf(f):
-  parser = ConfigParser()
+  # no interpolation, so a '%' in the download directory is read as it is
+  parser = ConfigParser(interpolation=None)
   # keep camelCase keys when writing the file
   parser.optionxform = str
   # Conf defaults are used for the new file and for keys missing in an existing one
@@ -66,7 +68,7 @@ def loadConf(f):
       parser.write(output)
 
   c = parser['conf']
-  return Conf(c.getboolean('downloadImages'), c.getboolean('downloadVideos'), c.getboolean('downloadAttachments'), c.getint('postLimit'), c.getint('delay'))
+  return Conf(c.getboolean('downloadImages'), c.getboolean('downloadVideos'), c.getboolean('downloadAttachments'), c.getint('postLimit'), c.getint('delay'), c.get('downloadDir'))
 
 def downloadMedia(link: str, path: Path):
   r = get(link, stream=True)
@@ -111,8 +113,8 @@ class Creator:
     # grab new info from profile url
     if not hasattr(self, 'info'):
       self.info = self.getData()
-    self.savePath = Path(f"downloads/{self.info['name']} ({service})/")
-    Path.mkdir(self.savePath, exist_ok=True)
+    self.savePath = Path(conf.downloadDir, f"{self.info['name']} ({service})").expanduser()
+    Path.mkdir(self.savePath, parents=True, exist_ok=True)
     self.posts = []
 
   def getData(self):
