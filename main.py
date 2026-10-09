@@ -167,9 +167,12 @@ class Post:
 
     # unique function for videos and images
     def download(media):
+      # media path is "DownloadDirectory/CreatorDirectory/PostId_MediaName.fmt"
+      filePath = Path(self.creator.savePath, f"{self.id}_{media['name']}")
+      registered = media['name'] in data['services'][self.creator.service][self.creator.id][self.id]
 
-      # check if media is already downloaded
-      if media['name'] not in data['services'][self.creator.service][self.creator.id][self.id]:
+      # check if media is already downloaded and its file still exists
+      if not registered or not Path.exists(filePath):
 
         print(f"Downloading from {self.creator.info['name']} - {media['name']}")
         # insert subdomain file.example.com/
@@ -179,13 +182,13 @@ class Post:
         # the images with no higher resolution have no 'name' use the img. subdomain and url /thumbnail/data/
         thumbnail = True if media['name'] == media['path'] else None
         thumbnailUrl = f"{c.group(1)}img.{c.group(2)}thumbnail/data{media['path']}"
-        # media path is "DownloadDirectory/CreatorDirectory/PostId_MediaName.fmt"
-        path = Path(self.creator.savePath, f"{self.id}_{media['name']}")
-        downloadTry = downloadMedia(mediaUrl, path) if not thumbnail else downloadMedia(thumbnailUrl, path)
+        downloadTry = downloadMedia(mediaUrl, filePath) if not thumbnail else downloadMedia(thumbnailUrl, filePath)
 
         if downloadTry:
-          data['services'][self.creator.service][self.creator.id][self.id].append(media['name'])
-          saveData()
+          # a media downloaded again is already in data
+          if not registered:
+            data['services'][self.creator.service][self.creator.id][self.id].append(media['name'])
+            saveData()
         else:
           print("Couldn't download " + media['name'])
       else:
