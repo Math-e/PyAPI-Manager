@@ -166,7 +166,7 @@ class Post:
       data['services'][self.creator.service][self.creator.id][self.id] = []
 
     # unique function for videos and images
-    def download(media, thumbnail: bool = None):
+    def download(media):
 
       # check if media is already downloaded
       if media['name'] not in data['services'][self.creator.service][self.creator.id][self.id]:
@@ -177,10 +177,11 @@ class Post:
         cdnUrl = f'{c.group(1)}file.{c.group(2)}'
         mediaUrl = f"{cdnUrl}data{media['path']}"
         # the images with no higher resolution have no 'name' use the img. subdomain and url /thumbnail/data/
+        thumbnail = True if media['name'] == media['path'] else None
         thumbnailUrl = f"{c.group(1)}img.{c.group(2)}thumbnail/data{media['path']}"
         # media path is "DownloadDirectory/CreatorDirectory/PostId_MediaName.fmt"
         path = Path(self.creator.savePath, f"{self.id}_{media['name']}")
-        downloadTry = downloadMedia(mediaUrl, path) if thumbnail else downloadMedia(thumbnailUrl, path)
+        downloadTry = downloadMedia(mediaUrl, path) if not thumbnail else downloadMedia(thumbnailUrl, path)
 
         if downloadTry:
           data['services'][self.creator.service][self.creator.id][self.id].append(media['name'])
