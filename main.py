@@ -5,17 +5,19 @@ from requests import get
 from sys import argv
 from pathlib import Path
 from configparser import ConfigParser
+from time import sleep
 try:
   from tqdm import tqdm
 except ModuleNotFoundError:
     print("tqdm not installed")
 
 class Conf:
-  def __init__(self, images: bool = True, videos: bool = False, attachments: bool = True, postLimit: int = 10):
+  def __init__(self, images: bool = True, videos: bool = False, attachments: bool = True, postLimit: int = 10, delay: int = 0):
     self.downloadImages = images
     self.downloadVideos = videos
     self.downloadAttachments = attachments
     self.postLimit = postLimit
+    self.delay = delay
 
 class Session:
   def __init__(self):
@@ -64,7 +66,7 @@ def loadConf(f):
       parser.write(output)
 
   c = parser['conf']
-  return Conf(c.getboolean('downloadImages'), c.getboolean('downloadVideos'), c.getboolean('downloadAttachments'), c.getint('postLimit'))
+  return Conf(c.getboolean('downloadImages'), c.getboolean('downloadVideos'), c.getboolean('downloadAttachments'), c.getint('postLimit'), c.getint('delay'))
 
 def downloadMedia(link: str, path: Path):
   r = get(link, stream=True)
@@ -202,6 +204,8 @@ class Post:
         download(att)
     
     s.downloadedPosts += 1
+    # delay in-between posts to avoid status 429
+    sleep(conf.delay)
     
 
 def downloadLink():
